@@ -35,6 +35,10 @@ class NoHistoryException(TraktException):
     pass
 
 
+class NoPublicHistoryException(NoHistoryException):
+    pass
+
+
 def format_episode_output(user, show, season, episode, title):
     pad_episode = str(episode).zfill(2)
     return f'{user} last watched: {show} {season}x{pad_episode} - {title}'
@@ -83,6 +87,9 @@ def get_headers(client_id):
 def get_last_play(response):
     if response.status_code == 404:
         raise NoUserException('User does not exist')
+
+    if response.status_code == 401:
+        raise NoPublicHistoryException("User's profile is private")
 
     if len(response.json()) == 0:
         raise NoHistoryException('User has no history')
