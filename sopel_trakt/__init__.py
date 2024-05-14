@@ -1,20 +1,13 @@
-# coding=utf-8
+from __future__ import annotations
 
-from __future__ import (unicode_literals, absolute_import,
-                        division, print_function)
-import os
-import itertools
-import random
-import textwrap
-
-import sopel.module
-from sopel.config.types import StaticSection, ValidatedAttribute
-import sopel.db
 import requests
 
+from sopel import plugin
+from sopel.config import types
 
-class TraktSection(StaticSection):
-    api = ValidatedAttribute('api')
+
+class TraktSection(types.StaticSection):
+    client_id = types.SecretAttribute('client_id', default=types.NO_DEFAULT)
 
 
 def setup(bot):
@@ -22,19 +15,23 @@ def setup(bot):
 
 
 def configure(config):
-    config.define_section('trakt', traktSection, validate=False)
-    config.trakt.configure_setting('api', 'Enter trakt api: ')
+    config.define_section('trakt', TraktSection, validate=False)
+    config.trakt.configure_setting('client_id', 'Enter Trakt client ID: ')
 
 
-class NoUserSetException(Exception):
+class TraktException(Exception):
     pass
 
 
-class NoUserException(Exception):
+class NoUserSetException(TraktException):
     pass
 
 
-class NoHistoryException(Exception):
+class NoUserException(TraktException):
+    pass
+
+
+class NoHistoryException(TraktException):
     pass
 
 
@@ -60,28 +57,26 @@ def format_output(user, json):
                                    json['movie']['year'])
 
 
-def get_trakt_user(arg, nick, config):
+def get_trakt_user(arg, nick, db):
     if arg:
         return arg
 
-    db = sopel.db.SopelDB(config)
     trakt_user = db.get_nick_value(nick, 'trakt_user')
     if trakt_user:
         return trakt_user
 
-    msg = 'User not set, use .traktset or pass user as argument'
-    raise NoUserSetException(msg)
+    raise NoUserSetException
 
 
 def get_api_url(user):
     return f'https://api.trakt.tv/users/{user}/history'
 
 
-def get_headers(api_key):
+def get_headers(client_id):
     return {
         'Content-Type': 'application/json',
         'trakt-api-version': '2',
-        'trakt-api-key': api_key
+        'trakt-api-key': client_id
     }
 
 
@@ -95,21 +90,21 @@ def get_last_play(response):
     return response.json()[0]
 
 
-@sopel.module.commands('trakt')
+@plugin.commands('trakt')
 def trakt_command(bot, trigger):
-    api_key = os.getenv('SOPEL_TRAKT_API') or bot.config.trakt.api
-    if not api_key:
-        bot.say('No api key set, set in config or environment variable')
-        return
+    client_id = bot.config.trakt.client_id
 
     try:
-        user = get_trakt_user(trigger.group(2), trigger.nick, bot.config)
-    except NoUserSetException as e:
-        bot.say(str(e))
+        user = get_trakt_user(trigger.group(3), trigger.nick, bot.db)
+    except NoUserSetException:
+        bot.reply(
+            "User not set; use {}traktset or pass user as argument"
+            .format(bot.config.core.help_prefix)
+        )
         return
 
     api_url = get_api_url(user)
-    headers = get_headers(api_key)
+    headers = get_headers(client_id)
     r = requests.get(api_url, headers=headers)
 
     try:
@@ -122,7 +117,7 @@ def trakt_command(bot, trigger):
     bot.say(out)
 
 
-@sopel.module.commands('traktset')
+@plugin.commands('traktset')
 def traktset(bot, trigger):
     user = trigger.group(2)
 
@@ -130,7 +125,6 @@ def traktset(bot, trigger):
         bot.say('no user given')
         return
 
-    db = sopel.db.SopelDB(bot.config)
-    db.set_nick_value(trigger.nick, 'trakt_user', user)
+    bot.db.set_nick_value(trigger.nick, 'trakt_user', user)
 
     bot.say(f'{trigger.nick}\'s trakt user is now set as {user}')

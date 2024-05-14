@@ -23,7 +23,7 @@ clean-test:  ## remove test and coverage artifacts
 	rm -fr .pytest_cache
 
 lint:  ## check style with flake8
-	flake8 sopel-trakt tests
+	flake8 sopel_trakt tests
 
 test:  ## run tests quickly with the default Python
 	python -m pytest

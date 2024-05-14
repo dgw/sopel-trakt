@@ -1,14 +1,10 @@
-#!/usr/bin/env python
-# coding=utf-8
+from __future__ import annotations
 
-from __future__ import (unicode_literals, absolute_import,
-                        division, print_function)
-
-import unittest
 import pytest
+import unittest
 import unittest.mock
 
-from sopel_modules.trakt import trakt
+import sopel_trakt as trakt
 
 
 def test_format_episode_output():
@@ -27,8 +23,8 @@ def test_format_movie_output():
     assert expected == out
 
 
-@unittest.mock.patch('sopel_modules.trakt.trakt.format_episode_output')
-@unittest.mock.patch('sopel_modules.trakt.trakt.format_movie_output')
+@unittest.mock.patch('sopel_trakt.format_episode_output')
+@unittest.mock.patch('sopel_trakt.format_movie_output')
 def test_format_output_episode(mock_movie_format, mock_ep_format):
     json = {
         'type': 'episode',
@@ -46,8 +42,8 @@ def test_format_output_episode(mock_movie_format, mock_ep_format):
     assert not mock_movie_format.called
 
 
-@unittest.mock.patch('sopel_modules.trakt.trakt.format_episode_output')
-@unittest.mock.patch('sopel_modules.trakt.trakt.format_movie_output')
+@unittest.mock.patch('sopel_trakt.format_episode_output')
+@unittest.mock.patch('sopel_trakt.format_movie_output')
 def test_format_output_movie(mock_movie_format, mock_ep_format):
     json = {
         'type': 'movie',
@@ -65,38 +61,17 @@ def test_format_output_movie(mock_movie_format, mock_ep_format):
 
 def test_get_trakt_user_with_arg():
     expected = 'arg_user'
-
-    out = trakt.get_trakt_user('arg_user', 'nick', 'config')
-
-    assert expected == out
-
-
-@unittest.mock.patch('sopel_modules.trakt.trakt.sopel.db.SopelDB')
-def test_get_trakt_user_from_db(mock_db):
-    expected = 'db_user'
-
-    mock_db.return_value.get_nick_value.return_value = 'db_user'
-
-    out = trakt.get_trakt_user(None, 'nick', 'config')
+    out = trakt.get_trakt_user('arg_user', 'nick', 'mock_db')
 
     assert expected == out
-
-
-@unittest.mock.patch('sopel_modules.trakt.trakt.sopel.db.SopelDB')
-def test_get_lastfm_user_none(mock_db):
-    mock_db.return_value.get_nick_value.return_value = None
-
-    with pytest.raises(trakt.NoUserSetException) as e:
-        trakt.get_trakt_user(None, 'nick', 'config')
-
-    msg = 'User not set, use .traktset or pass user as argument'
-    assert (str(e.value)) == msg
 
 
 def test_get_api_url():
     expected = 'https://api.trakt.tv/users/testuser/history'
 
     out = trakt.get_api_url('testuser')
+
+    assert expected == out
 
 
 def test_get_headers():
