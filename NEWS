@@ -1,3 +1,9 @@
+### 0.2.1
+
+Fixed:
+* Handle private profiles with a friendly error message
+
+
 ### 0.2.0
 
 Revived by new maintainer ([dgw](https://github.com/dgw)) under a new package

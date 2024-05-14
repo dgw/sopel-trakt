@@ -14,7 +14,7 @@ readme = { file=["README.md", "NEWS"], content-type="text/markdown" }
 
 [project]
 name = "sopel-trakt"
-version = "0.2.0"
+version = "0.2.1"
 description = "A Sopel plugin to fetch users' recent Trakt plays"
 
 authors = [
