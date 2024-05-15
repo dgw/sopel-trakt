@@ -4,7 +4,7 @@ import pytest
 import unittest
 import unittest.mock
 
-import sopel_trakt as trakt
+from sopel_trakt import plugin as trakt
 
 
 def test_format_episode_output():
@@ -23,8 +23,8 @@ def test_format_movie_output():
     assert expected == out
 
 
-@unittest.mock.patch('sopel_trakt.format_episode_output')
-@unittest.mock.patch('sopel_trakt.format_movie_output')
+@unittest.mock.patch('sopel_trakt.plugin.format_episode_output')
+@unittest.mock.patch('sopel_trakt.plugin.format_movie_output')
 def test_format_output_episode(mock_movie_format, mock_ep_format):
     json = {
         'type': 'episode',
@@ -42,8 +42,8 @@ def test_format_output_episode(mock_movie_format, mock_ep_format):
     assert not mock_movie_format.called
 
 
-@unittest.mock.patch('sopel_trakt.format_episode_output')
-@unittest.mock.patch('sopel_trakt.format_movie_output')
+@unittest.mock.patch('sopel_trakt.plugin.format_episode_output')
+@unittest.mock.patch('sopel_trakt.plugin.format_movie_output')
 def test_format_output_movie(mock_movie_format, mock_ep_format):
     json = {
         'type': 'movie',
@@ -66,10 +66,10 @@ def test_get_trakt_user_with_arg():
     assert expected == out
 
 
-def test_get_api_url():
+def test_get_history_endpoint():
     expected = 'https://api.trakt.tv/users/testuser/history'
 
-    out = trakt.get_api_url('testuser')
+    out = trakt.get_history_endpoint('testuser')
 
     assert expected == out
 

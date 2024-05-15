@@ -54,4 +54,4 @@ dependencies = [
 "Bug Tracker" = "https://github.com/dgw/sopel-trakt/issues"
 
 [project.entry-points."sopel.plugins"]
-"trakt" = "sopel_trakt"
+"trakt" = "sopel_trakt.plugin"
