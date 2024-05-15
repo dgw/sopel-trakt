@@ -14,7 +14,8 @@ def minutes_to_hhmm(minutes):
     return f'{hours}h{minutes}m'
 
 
-@plugin.url(r'https?://trakt.tv/(?P<kind>show|movie)s/(?P<slug>[a-zA-Z0-9-]+)/?')
+@plugin.url(
+    r'https?://trakt.tv/(?P<kind>show|movie)s/(?P<slug>[a-zA-Z0-9-]+)/?')
 def link_handler(bot, trigger):
     kind = trigger.group('kind')
     slug = trigger.group('slug')

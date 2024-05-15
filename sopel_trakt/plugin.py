@@ -5,14 +5,13 @@ import requests
 from sopel import plugin
 from sopel.config import types
 
+from . import formats, util
 from .errors import (
     NoUserException,
     NoUserSetException,
     NoHistoryException,
-    NoPublicHistoryException,
 )
 from .links import link_handler  # noqa
-from .util import get_headers
 
 
 class TraktSection(types.StaticSection):
@@ -25,57 +24,7 @@ def setup(bot):
 
 def configure(config):
     config.define_section('trakt', TraktSection, validate=False)
-    config.trakt.configure_setting('client_id', 'Enter Trakt client ID: ')
-
-
-def format_episode_output(user, show, season, episode, title):
-    pad_episode = str(episode).zfill(2)
-    return f'{user} last watched: {show} {season}x{pad_episode} - {title}'
-
-
-def format_movie_output(user, film, year):
-    return f'{user} last watched: {film} ({year})'
-
-
-def format_output(user, json):
-    if json['type'] == 'episode':
-        return format_episode_output(user,
-                                     json['show']['title'],
-                                     json['episode']['season'],
-                                     json['episode']['number'],
-                                     json['episode']['title'])
-    if json['type'] == 'movie':
-        return format_movie_output(user,
-                                   json['movie']['title'],
-                                   json['movie']['year'])
-
-
-def get_trakt_user(arg, nick, db):
-    if arg:
-        return arg
-
-    trakt_user = db.get_nick_value(nick, 'trakt_user')
-    if trakt_user:
-        return trakt_user
-
-    raise NoUserSetException
-
-
-def get_history_endpoint(user):
-    return f'https://api.trakt.tv/users/{user}/history'
-
-
-def get_last_play(response):
-    if response.status_code == 404:
-        raise NoUserException('User does not exist')
-
-    if response.status_code == 401:
-        raise NoPublicHistoryException("User's profile is private")
-
-    if len(response.json()) == 0:
-        raise NoHistoryException('User has no history')
-
-    return response.json()[0]
+    config.trakt.configure_setting('client_id', 'Enter Trakt client ID:')
 
 
 @plugin.commands('trakt')
@@ -83,7 +32,7 @@ def trakt_command(bot, trigger):
     client_id = bot.config.trakt.client_id
 
     try:
-        user = get_trakt_user(trigger.group(3), trigger.nick, bot.db)
+        user = util.get_trakt_user(trigger.group(3), trigger.nick, bot.db)
     except NoUserSetException:
         bot.reply(
             "User not set; use {}traktset or pass user as argument"
@@ -91,17 +40,17 @@ def trakt_command(bot, trigger):
         )
         return
 
-    api_url = get_history_endpoint(user)
-    headers = get_headers(client_id)
+    api_url = util.get_history_endpoint(user)
+    headers = util.get_headers(client_id)
     r = requests.get(api_url, headers=headers)
 
     try:
-        last_play = get_last_play(r)
+        last_play = util.get_last_history_item(r)
     except (NoUserException, NoHistoryException) as e:
         bot.say(str(e))
         return
 
-    out = format_output(user, last_play)
+    out = formats.last_watched(user, last_play)
     bot.say(out)
 
 
