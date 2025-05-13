@@ -2,6 +2,9 @@
 
 A Sopel plugin to fetch users' recent Trakt plays
 
+> [!IMPORTANT]
+> This plugin is no longer maintained, in protest of Trakt's [insulting May 2025 price hikes](https://forums.trakt.tv/t/new-vip-standardisation/56715).
+
 ## Installation
 
 Can be installed from PyPI using:
