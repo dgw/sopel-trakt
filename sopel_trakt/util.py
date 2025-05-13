@@ -1,6 +1,21 @@
 from __future__ import annotations
 
+from datetime import datetime
+from enum import StrEnum
+
 from . import errors
+
+
+class BRAND_COLORS(StrEnum):
+    """Trakt brand colors, in RGB hex."""
+    VIP = 'ED1C24'
+    VIP_EP = 'B50D13'
+    VIP_OG = VIP_EP
+    VIP_TEXT = 'FFF'
+
+
+def parse_timestamp(timestamp: str) -> datetime:
+    return datetime.fromisoformat(timestamp)
 
 
 def get_headers(client_id):
